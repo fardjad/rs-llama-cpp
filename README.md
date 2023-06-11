@@ -4,7 +4,7 @@
 
 ## Description
 
-LLaMA.cpp is under heavy development with contributions pouring in from numerous individuals every day. Currently, its C API is very low-level and given how fast the project is evolving, keeping up with the changes and porting the examples into a higher-level API prove to be difficult. As a trade-off, this project prioritizes automation over flexibility by automatically generating Rust bindings for the main example of LLaMA.cpp.
+[LLaMA.cpp][1] is under heavy development with contributions pouring in from numerous individuals every day. Currently, its C API is very low-level and given how fast the project is evolving, keeping up with the changes and porting the examples into a higher-level API prove to be difficult. As a trade-off, this project prioritizes automation over flexibility by automatically generating Rust bindings for the [main example][2] of LLaMA.cpp.
 
 ### Limitations
 
@@ -18,3 +18,11 @@ The main design goal of this project is to minimize the effort of updating LLaMA
 ## Usage
 
 TODO
+
+## Roadmap
+
+- [ ] Make a safe wrapper around the generated bindings
+- [ ] Fix the bindgen warning on `aarch64-unknown-linux-musl`
+
+[1]: https://github.com/ggerganov/llama.cpp
+[2]: https://github.com/ggerganov/llama.cpp/blob/master/examples/main/main.cpp
