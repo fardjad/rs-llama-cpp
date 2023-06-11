@@ -130,35 +130,10 @@ jobs:
           TAG: ${{ needs.create-tag.outputs.tag }}
           TARGET: ${{ matrix.target }}
         run: .github/scripts/package.sh
-      #- name: Publish
-      #  uses: softprops/action-gh-release@master
-      #  with:
-      #    draft: true
-      #    files: "rs_llama_cpp*"
-      #  env:
-      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  #publish:
-  #  name: Publish Docs
-  #  needs: [doc-book]
-  #  runs-on: ubuntu-22.04
-  #  if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-  #  steps:
-  #    - name: Download book
-  #      uses: actions/download-artifact@v1
-  #      with:
-  #        name: doc-book
-  #    - name: Assemble gh-pages
-  #      run: |
-  #        mv doc-book gh-pages
-  #    # If this is a push to the main branch push to the `gh-pages` using a
-  #    # deploy key. Note that a deploy key is necessary for now because otherwise
-  #    # using the default token for github actions doesn't actually trigger a page
-  #    # rebuild.
-  #    - name: Push to gh-pages
-  #      # Uses a rust script to setup and push to the gh-pages branch
-  #      run: curl -LsSf https://git.io/fhJ8n | rustc - && (cd gh-pages && ../rust_out)
-  #      env:
-  #        GITHUB_DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
-  #        BUILD_REPOSITORY_ID: ${{ github.repository }}
-  #        BUILD_SOURCEVERSION: ${{ github.sha }}
+      - name: Release
+        uses: softprops/action-gh-release@master
+        with:
+          files: "rs_llama_cpp*"
+          tag_name: ${{ needs.create-tag.outputs.tag }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

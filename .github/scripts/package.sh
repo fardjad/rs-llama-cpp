@@ -12,15 +12,7 @@ release_name="$NAME-$tag-$TARGET"
 release_tar="${release_name}.tar.gz"
 mkdir "$release_name"
 
-if [[ "$TARGET" =~ windows ]]; then
-    # TODO: remove this once I figure out the name of the file
-    ls target/$TARGET/release
-    rlib="lib$NAME.rlib"
-else
-    rlib="lib$NAME.rlib"
-fi
-
-cp "target/$TARGET/release/$rlib" "$release_name/"
+cp "target/$TARGET/release/lib$NAME.rlib" "$release_name/"
 cp README.md LICENSE "$release_name/"
 tar czf "$release_tar" "$release_name"
 
