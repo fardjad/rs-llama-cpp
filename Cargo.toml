@@ -1,7 +1,15 @@
 [package]
 name = "rs-llama-cpp"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
+license = "MIT"
+description = "Automated Rust bindings generation for LLaMA.cpp"
+homepage = "https://github.com/fardjad/rs-llama-cpp"
+repository = "https://github.com/fardjad/rs-llama-cpp"
+authors = ["Fardjad Davari <public@fardjad.com>"]
+keywords = ["llm", "llama", "llama-cpp", "bindings"]
+categories = ["science"]
+exclude = [".github"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

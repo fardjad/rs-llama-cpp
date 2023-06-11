@@ -118,9 +118,9 @@ jobs:
           cmake ..
           cd ../../..
 
-      - name: cargo fetch
+      - name: Cargo Fetch
         run: cargo fetch --target ${{ matrix.target }}
-      - name: Release build
+      - name: Release Build
         run: cargo build --release --target ${{ matrix.target }}
       - name: Release
         uses: softprops/action-gh-release@master
@@ -128,3 +128,7 @@ jobs:
           tag_name: ${{ needs.create-tag.outputs.tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Cargo Publish
+        run: cargo publish --dry-run --all-features --target ${{ matrix.target }}
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
