@@ -96,8 +96,8 @@ fn main() {
     #[cfg(target_os = "windows")]
     {
         std::fs::copy(
-            "llama.cpp/llama.lib",
-            format!("{}/libllama.a", env::var("OUT_DIR").unwrap()),
+            "llama.cpp/Release/llama.lib",
+            format!("{}/llama.lib", env::var("OUT_DIR").unwrap()),
         )
         .expect("Failed to copy lib");
         std::fs::copy(
