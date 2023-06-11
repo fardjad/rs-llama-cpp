@@ -52,8 +52,7 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local pull.rebase true
 
-          # work around "insufficient permission for adding an object to repository database .git/object" issue
-          sudo chmod -R ugo+rwX .git
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - uses: Swatinem/rust-cache@master
       - uses: dtolnay/rust-toolchain@stable
@@ -123,17 +122,9 @@ jobs:
         run: cargo fetch --target ${{ matrix.target }}
       - name: Release build
         run: cargo build --release --target ${{ matrix.target }}
-      - name: Package
-        shell: bash
-        env:
-          NAME: rs_llama_cpp
-          TAG: ${{ needs.create-tag.outputs.tag }}
-          TARGET: ${{ matrix.target }}
-        run: .github/scripts/package.sh
       - name: Release
         uses: softprops/action-gh-release@master
         with:
-          files: "rs_llama_cpp*"
           tag_name: ${{ needs.create-tag.outputs.tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

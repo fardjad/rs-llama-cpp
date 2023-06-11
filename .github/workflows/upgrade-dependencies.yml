@@ -38,8 +38,8 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local pull.rebase true
 
-          # work around "insufficient permission for adding an object to repository database .git/object" issue
-          sudo chmod -R ugo+rwX .git
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: Check for updates
         id: check-updates
         run: |
