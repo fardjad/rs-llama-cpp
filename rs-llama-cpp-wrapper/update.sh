@@ -5,8 +5,9 @@ cd "$(dirname "$0")"
 
 echo "Updating llama.cpp..."
 pushd llama.cpp &> /dev/null
-git checkout master &> /dev/null
-git pull
+git fetch origin master
+git reset --hard origin/master
+git checkout master -f
 popd &> /dev/null
 
 echo "Updating Generator..."
