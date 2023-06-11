@@ -13,11 +13,8 @@ jobs:
         with:
           submodules: "recursive"
 
-      - uses: actions-rs/toolchain@master
-        with:
-          toolchain: stable
-          override: true
       - uses: Swatinem/rust-cache@master
+      - uses: dtolnay/rust-toolchain@stable
       - run: cargo install cargo-bump cargo-get cargo-edit cargo-upgrades
 
       - uses: actions/setup-node@main
@@ -26,7 +23,7 @@ jobs:
       - name: Cache node modules
         uses: actions/cache@main
         env:
-          cache-name: cache-node-${{ matrix.node }}-modules
+          cache-name: cache-node-modules
         with:
           path: ~/.npm
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
