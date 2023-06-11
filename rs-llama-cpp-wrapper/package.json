@@ -1,0 +1,15 @@
+{
+  "private": "true",
+  "scripts": {
+    "format": "clang-format -i rs-llama-cpp-wrapper.cpp run-inference.cpp rs-llama-cpp-wrapper.h run-inference.h",
+    "generate": "node generate.mjs"
+  },
+  "dependencies": {
+    "clang-format": "^1.8.0",
+    "tree-sitter": "^0.20.1",
+    "tree-sitter-cpp": "^0.20.0"
+  },
+  "devDependencies": {
+    "npm-check-updates": "^16.10.12"
+  }
+}

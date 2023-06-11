@@ -327,3 +327,4 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,vim,macos,windows,linux,rust,rust-analyzer,node,c++,cmake
+build/
