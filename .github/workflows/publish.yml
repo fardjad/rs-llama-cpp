@@ -1,0 +1,176 @@
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+name: publish
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+        with:
+          submodules: "recursive"
+
+      - name: Generate build-info.h
+        run: |
+          cd rs-llama-cpp-wrapper/llama.cpp
+          mkdir -p build
+          cd build
+          cmake ..
+          cd ../../..
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@master
+
+      - run: rustup component add rustfmt
+      - name: check rustfmt
+        run: cargo fmt -- --check --color always
+
+      - run: rustup component add clippy
+      - run: cargo fetch
+      - name: cargo clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+  #test:
+  #  name: Test
+  #  strategy:
+  #    matrix:
+  #      os: [ubuntu-latest, macos-latest, windows-latest]
+  #  runs-on: ${{ matrix.os }}
+  #  steps:
+  #    - uses: actions/checkout@main
+  #    - uses: dtolnay/rust-toolchain@stable
+  #    - uses: Swatinem/rust-cache@master
+  #    - run: cargo fetch
+  #    - name: cargo test build
+  #      run: cargo build --tests --release
+  #    - name: cargo test
+  #      run: cargo test --release
+
+  create-tag:
+    name: create-tag
+    needs: [lint]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+      - name: Get Tags
+        run: git fetch --tags origin
+      - name: Setup Git
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local pull.rebase true
+
+          # work around "insufficient permission for adding an object to repository database .git/object" issue
+          sudo chmod -R ugo+rwX .git
+
+      - uses: Swatinem/rust-cache@master
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo install cargo-get
+
+      - name: Create tag if not exists
+        id: create-tag
+        run: |
+          set -ex
+          PKG_VERSION=$(cargo get version)
+          TAG="v${PKG_VERSION}"
+          if git rev-parse "${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists"
+            echo "tag-created=0" >> $GITHUB_OUTPUT
+          else
+            git tag "${TAG}"
+            git push origin "${TAG}"
+            echo "tag-created=1" >> $GITHUB_OUTPUT
+          fi
+    outputs:
+      tag-created: ${{ steps.create-tag.outputs.tag-created }}
+
+  release:
+    name: release
+    needs: [create-tag]
+    if: needs.create-tag.outputs.tag-created == '1'
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            container: ghcr.io/cross-rs/aarch64-unknown-linux-musl:edge
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
+    steps:
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          target: ${{ matrix.target }}
+      - name: Install musl tools
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: |
+          sudo apt-get install -y musl-tools
+
+      - uses: actions/checkout@main
+        with:
+          submodules: "recursive"
+
+      - name: Generate build-info.h
+        run: |
+          cd rs-llama-cpp-wrapper/llama.cpp
+          mkdir build
+          cd build
+          cmake ..
+          cd ../../..
+
+      - name: cargo fetch
+        run: cargo fetch --target ${{ matrix.target }}
+      - name: Release build
+        run: cargo build --release --target ${{ matrix.target }}
+      #- name: Package
+      #  shell: bash
+      #  env:
+      #    NAME: cargo-about
+      #    TARGET: ${{ matrix.target }}
+      #  run: .github/scripts/package.sh
+      #- name: Publish
+      #  uses: softprops/action-gh-release@v1
+      #  with:
+      #    draft: true
+      #    files: "cargo-about*"
+      #  env:
+      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  #publish:
+  #  name: Publish Docs
+  #  needs: [doc-book]
+  #  runs-on: ubuntu-22.04
+  #  if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  #  steps:
+  #    - name: Download book
+  #      uses: actions/download-artifact@v1
+  #      with:
+  #        name: doc-book
+  #    - name: Assemble gh-pages
+  #      run: |
+  #        mv doc-book gh-pages
+  #    # If this is a push to the main branch push to the `gh-pages` using a
+  #    # deploy key. Note that a deploy key is necessary for now because otherwise
+  #    # using the default token for github actions doesn't actually trigger a page
+  #    # rebuild.
+  #    - name: Push to gh-pages
+  #      # Uses a rust script to setup and push to the gh-pages branch
+  #      run: curl -LsSf https://git.io/fhJ8n | rustc - && (cd gh-pages && ../rust_out)
+  #      env:
+  #        GITHUB_DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+  #        BUILD_REPOSITORY_ID: ${{ github.repository }}
+  #        BUILD_SOURCEVERSION: ${{ github.sha }}
