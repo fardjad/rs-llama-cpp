@@ -128,7 +128,10 @@ jobs:
           tag_name: ${{ needs.create-tag.outputs.tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Cargo Publish Verify
+        run: cargo publish --dry-run --allow-dirty --all-features --target ${{ matrix.target }}
       - name: Cargo Publish
-        run: cargo publish --dry-run --all-features --target ${{ matrix.target }}
+        if: matrix.target == 'aarch64-apple-darwin'
+        run: cargo publish --allow-dirty --all-features
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
