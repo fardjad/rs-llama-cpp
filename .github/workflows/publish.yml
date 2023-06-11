@@ -1,3 +1,4 @@
+# Mostly based on https://github.com/EmbarkStudios/cargo-about/blob/main/.github/workflows/rust-ci.yml
 on:
   push:
     branches:
@@ -37,22 +38,6 @@ jobs:
       - name: cargo clippy
         run: cargo clippy --all-targets -- -D warnings
 
-  #test:
-  #  name: Test
-  #  strategy:
-  #    matrix:
-  #      os: [ubuntu-latest, macos-latest, windows-latest]
-  #  runs-on: ${{ matrix.os }}
-  #  steps:
-  #    - uses: actions/checkout@main
-  #    - uses: dtolnay/rust-toolchain@stable
-  #    - uses: Swatinem/rust-cache@master
-  #    - run: cargo fetch
-  #    - name: cargo test build
-  #      run: cargo build --tests --release
-  #    - name: cargo test
-  #      run: cargo test --release
-
   create-tag:
     name: create-tag
     needs: [lint]
@@ -87,9 +72,11 @@ jobs:
             git tag "${TAG}"
             git push origin "${TAG}"
             echo "tag-created=1" >> $GITHUB_OUTPUT
+            echo "tag=${TAG}" >> $GITHUB_OUTPUT
           fi
     outputs:
       tag-created: ${{ steps.create-tag.outputs.tag-created }}
+      tag: ${{ steps.create-tag.outputs.tag }}
 
   release:
     name: release
@@ -136,17 +123,18 @@ jobs:
         run: cargo fetch --target ${{ matrix.target }}
       - name: Release build
         run: cargo build --release --target ${{ matrix.target }}
-      #- name: Package
-      #  shell: bash
-      #  env:
-      #    NAME: cargo-about
-      #    TARGET: ${{ matrix.target }}
-      #  run: .github/scripts/package.sh
+      - name: Package
+        shell: bash
+        env:
+          NAME: rs_llama_cpp
+          TAG: ${{ needs.create-tag.outputs.tag }}
+          TARGET: ${{ matrix.target }}
+        run: .github/scripts/package.sh
       #- name: Publish
-      #  uses: softprops/action-gh-release@v1
+      #  uses: softprops/action-gh-release@master
       #  with:
       #    draft: true
-      #    files: "cargo-about*"
+      #    files: "rs_llama_cpp*"
       #  env:
       #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
