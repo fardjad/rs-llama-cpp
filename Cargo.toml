@@ -1,6 +1,6 @@
 [package]
 name = "rs-llama-cpp"
-version = "0.1.12"
+version = "0.1.13"
 edition = "2021"
 license = "MIT"
 description = "Automated Rust bindings generation for LLaMA.cpp"
@@ -16,4 +16,4 @@ exclude = [".github"]
 [dependencies]
 
 [build-dependencies]
-bindgen = "0.65"
+bindgen = "0.66"
