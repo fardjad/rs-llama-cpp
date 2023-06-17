@@ -10,7 +10,12 @@ gpt_params convert_params_to_cpp(const gpt_params_c params) {
   params_cpp.n_batch = params.n_batch;
   params_cpp.n_keep = params.n_keep;
   params_cpp.n_gpu_layers = params.n_gpu_layers;
+  params_cpp.main_gpu = params.main_gpu;
+  for (int i = 0; i < LLAMA_MAX_DEVICES; ++i) {
+    params_cpp.tensor_split[i] = params.tensor_split[i];
+  }
 
+  // Skip logit_bias for now
   params_cpp.top_k = params.top_k;
   params_cpp.top_p = params.top_p;
   params_cpp.tfs_z = params.tfs_z;
@@ -24,21 +29,23 @@ gpt_params convert_params_to_cpp(const gpt_params_c params) {
   params_cpp.mirostat_tau = params.mirostat_tau;
   params_cpp.mirostat_eta = params.mirostat_eta;
 
-  params_cpp.model = std::string(params.model);
-  params_cpp.model_alias = std::string(params.model_alias);
-  params_cpp.prompt = std::string(params.prompt);
-  params_cpp.path_prompt_cache = std::string(params.path_prompt_cache);
-  params_cpp.input_prefix = std::string(params.input_prefix);
-  params_cpp.input_suffix = std::string(params.input_suffix);
+  params_cpp.model = std::move(params.model);
+  params_cpp.model_alias = std::move(params.model_alias);
+  params_cpp.prompt = std::move(params.prompt);
+  params_cpp.path_prompt_cache = std::move(params.path_prompt_cache);
+  params_cpp.input_prefix = std::move(params.input_prefix);
+  params_cpp.input_suffix = std::move(params.input_suffix);
+  // Skip antiprompt for now
 
-  params_cpp.lora_adapter = std::string(params.lora_adapter);
-  params_cpp.lora_base = std::string(params.lora_base);
+  params_cpp.lora_adapter = std::move(params.lora_adapter);
+  params_cpp.lora_base = std::move(params.lora_base);
 
   params_cpp.memory_f16 = params.memory_f16;
   params_cpp.random_prompt = params.random_prompt;
   params_cpp.use_color = params.use_color;
   params_cpp.interactive = params.interactive;
   params_cpp.prompt_cache_all = params.prompt_cache_all;
+  params_cpp.prompt_cache_ro = params.prompt_cache_ro;
 
   params_cpp.embedding = params.embedding;
   params_cpp.interactive_first = params.interactive_first;
@@ -50,11 +57,12 @@ gpt_params convert_params_to_cpp(const gpt_params_c params) {
   params_cpp.use_mmap = params.use_mmap;
   params_cpp.use_mlock = params.use_mlock;
   params_cpp.mem_test = params.mem_test;
+  params_cpp.export_cgraph = params.export_cgraph;
   params_cpp.verbose_prompt = params.verbose_prompt;
 
   return params_cpp;
 }
 
-void rsllama_run_inference(gpt_params_c params, token_callback on_token) {
+void rs_llama_cpp_run_inference(gpt_params_c params, token_callback on_token) {
   run_inference(convert_params_to_cpp(params), on_token);
 }

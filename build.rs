@@ -23,7 +23,17 @@ fn main() {
     println!("cargo:rustc-link-search={}", env::var("OUT_DIR").unwrap());
     println!("cargo:rustc-link-lib=static=llama");
     println!("cargo:rustc-link-lib=static={}", LIB_NAME);
-    println!("cargo:rerun-if-changed={}/{}.h", LIB_NAME, LIB_NAME);
+
+    for file in &[
+        "llama.cpp",
+        "CMakeLists.txt",
+        "rs-llama-cpp-wrapper.h",
+        "rs-llama-cpp-wrapper.cpp",
+        "run-inference.h",
+        "run-inference.cpp",
+    ] {
+        println!("cargo:rerun-if-changed={}/{}", LIB_NAME, file);
+    }
 
     let original_dir = env::current_dir().unwrap();
 
@@ -125,7 +135,6 @@ fn main() {
 
     // clean the modified files to prevent Cargo from complaining during crate publish
     _ = std::fs::remove_dir_all(build_dir);
-    _ = std::fs::remove_file(format!("./{}/llama.cpp/build-info.h", LIB_NAME));
 }
 
 // From https://github.com/alexcrichton/cc-rs/blob/fba7feded71ee4f63cfe885673ead6d7b4f2f454/src/lib.rs#L2462

@@ -21,15 +21,9 @@
 #include <unistd.h>
 #elif defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
-#ifndef NOMINMAX
 #define NOMINMAX
-#endif
 #include <signal.h>
 #include <windows.h>
-#endif
-
-#if defined(_MSC_VER)
-#pragma warning(disable : 4244 4267) // possible loss of data
 #endif
 
 static console_state con_st;
@@ -86,11 +80,6 @@ int run_inference(gpt_params params, token_callback on_token = nullptr) {
             "2048 tokens (%d specified);"
             "expect poor results\n",
             __func__, params.n_ctx);
-  } else if (params.n_ctx < 8) {
-    fprintf(stderr,
-            "%s: warning: minimum context size is 8, using minimum size.\n",
-            __func__);
-    params.n_ctx = 8;
   }
 
   fprintf(stderr, "%s: build = %d (%s)\n", __func__, BUILD_NUMBER,
@@ -380,34 +369,9 @@ int run_inference(gpt_params params, token_callback on_token = nullptr) {
 
   std::vector<llama_token> embd;
 
-  // do one empty run to warm up the model
-  {
-    const std::vector<llama_token> tmp = {
-        llama_token_bos(),
-    };
-    llama_eval(ctx, tmp.data(), tmp.size(), 0, params.n_threads);
-    llama_reset_timings(ctx);
-  }
-
   while ((n_remain != 0 && !is_antiprompt) || params.interactive) {
     // predict
     if (embd.size() > 0) {
-      // Note: n_ctx - 4 here is to match the logic for commandline prompt
-      // handling via
-      // --prompt or --file which uses the same value.
-      auto max_embd_size = n_ctx - 4;
-      // Ensure the input doesn't exceed the context size by truncating embd if
-      // necessary.
-      if ((int)embd.size() > max_embd_size) {
-        auto skipped_tokens = embd.size() - max_embd_size;
-        console_set_color(con_st, CONSOLE_COLOR_ERROR);
-        printf("<<input too long: skipped %" PRIu64 "  token%s>>",
-               skipped_tokens, skipped_tokens != 1 ? "s" : "");
-        console_set_color(con_st, CONSOLE_COLOR_DEFAULT);
-        fflush(stdout);
-        embd.resize(max_embd_size);
-      }
-
       // infinite text generation via context swapping
       // if we run out of context:
       // - take the n_keep first tokens from the original prompt (via n_past)
@@ -617,7 +581,9 @@ int run_inference(gpt_params params, token_callback on_token = nullptr) {
     if (input_echo) {
       if (on_token != nullptr) {
         for (auto id : embd) {
-          on_token(llama_token_to_str(ctx, id));
+          if (!on_token(llama_token_to_str(ctx, id))) {
+            n_remain = 0;
+          }
         }
       }
     }

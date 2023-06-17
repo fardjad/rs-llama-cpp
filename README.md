@@ -17,12 +17,29 @@ The main design goal of this project is to minimize the effort of updating LLaMA
 
 ## Usage
 
-TODO
+```rust
+use rs_llama_cpp::{gpt_params_c, run_inference, str_to_mut_i8};
 
-## Roadmap
+fn main() {
+    let params: gpt_params_c = {
+        gpt_params_c {
+            model: str_to_mut_i8("/path/to/model.bin"),
+            prompt: str_to_mut_i8("Hello "),
+            ..Default::default()
+        }
+    };
 
-- [ ] Make a safe wrapper around the generated bindings
-- [ ] Fix the bindgen warning on `aarch64-unknown-linux-musl`
+    run_inference(params, |token| {
+        println!("Token: {}", token);
+
+        if token.ends_with("\n") {
+            return false; // stop inference
+        }
+
+        return true; // continue inference
+    });
+}
+```
 
 [1]: https://github.com/ggerganov/llama.cpp
 [2]: https://github.com/ggerganov/llama.cpp/blob/master/examples/main/main.cpp
