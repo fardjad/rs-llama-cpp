@@ -1,6 +1,6 @@
 [package]
 name = "rs-llama-cpp"
-version = "0.1.19"
+version = "0.1.20"
 edition = "2021"
 license = "MIT"
 description = "Automated Rust bindings generation for LLaMA.cpp"
