@@ -10,6 +10,6 @@
     "tree-sitter-cpp": "^0.20.0"
   },
   "devDependencies": {
-    "npm-check-updates": "^16.10.12"
+    "npm-check-updates": "^16.10.13"
   }
 }
