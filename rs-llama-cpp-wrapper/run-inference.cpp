@@ -109,12 +109,13 @@ int run_inference(gpt_params params, token_callback on_token = nullptr) {
 
   llama_init_backend();
 
+  llama_model *model;
   llama_context *ctx;
   g_ctx = &ctx;
 
   // load the model and apply lora adapter, if any
-  ctx = llama_init_from_gpt_params(params);
-  if (ctx == NULL) {
+  std::tie(model, ctx) = llama_init_from_gpt_params(params);
+  if (model == NULL) {
     fprintf(stderr, "%s: error: unable to load model\n", __func__);
     return 1;
   }
@@ -145,6 +146,7 @@ int run_inference(gpt_params params, token_callback on_token = nullptr) {
 
     llama_print_timings(ctx);
     llama_free(ctx);
+    llama_free_model(model);
 
     return 0;
   }
@@ -153,6 +155,7 @@ int run_inference(gpt_params params, token_callback on_token = nullptr) {
   if (params.export_cgraph) {
     llama_eval_export(ctx, "llama.ggml");
     llama_free(ctx);
+    llama_free_model(model);
 
     return 0;
   }
@@ -748,6 +751,7 @@ int run_inference(gpt_params params, token_callback on_token = nullptr) {
 
   llama_print_timings(ctx);
   llama_free(ctx);
+  llama_free_model(model);
 
   return 0;
 }
