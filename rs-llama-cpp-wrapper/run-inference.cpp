@@ -96,11 +96,11 @@ int run_inference(gpt_params params, token_callback on_token = nullptr) {
   fprintf(stderr, "%s: build = %d (%s)\n", __func__, BUILD_NUMBER,
           BUILD_COMMIT);
 
-  if (params.seed < 0) {
+  if (params.seed == LLAMA_DEFAULT_SEED) {
     params.seed = time(NULL);
   }
 
-  fprintf(stderr, "%s: seed  = %d\n", __func__, params.seed);
+  fprintf(stderr, "%s: seed  = %u\n", __func__, params.seed);
 
   std::mt19937 rng(params.seed);
   if (params.random_prompt) {
