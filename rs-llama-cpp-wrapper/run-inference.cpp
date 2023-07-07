@@ -82,7 +82,7 @@ int run_inference(gpt_params params, token_callback on_token = nullptr) {
 
   if (params.n_ctx > 2048) {
     fprintf(stderr,
-            "%s: warning: model does not support context sizes greater than "
+            "%s: warning: model might not support context sizes greater than "
             "2048 tokens (%d specified);"
             "expect poor results\n",
             __func__, params.n_ctx);
