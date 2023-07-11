@@ -107,7 +107,7 @@ int run_inference(gpt_params params, token_callback on_token = nullptr) {
     params.prompt = gpt_random_prompt(rng);
   }
 
-  llama_init_backend(params.numa);
+  llama_backend_init(params.numa);
 
   llama_model *model;
   llama_context *ctx;
@@ -752,6 +752,8 @@ int run_inference(gpt_params params, token_callback on_token = nullptr) {
   llama_print_timings(ctx);
   llama_free(ctx);
   llama_free_model(model);
+
+  llama_backend_free();
 
   return 0;
 }
