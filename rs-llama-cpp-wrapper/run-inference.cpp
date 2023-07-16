@@ -80,11 +80,23 @@ int run_inference(gpt_params params, token_callback on_token = nullptr) {
     return 0;
   }
 
+  if (params.rope_freq_base != 10000.0) {
+    fprintf(
+        stderr,
+        "%s: warning: changing RoPE frequency base to %g (default 10000.0)\n",
+        __func__, params.rope_freq_base);
+  }
+
+  if (params.rope_freq_scale != 1.0) {
+    fprintf(stderr, "%s: warning: scaling RoPE frequency by %g (default 1.0)\n",
+            __func__, params.rope_freq_scale);
+  }
+
   if (params.n_ctx > 2048) {
     fprintf(stderr,
-            "%s: warning: model might not support context sizes greater than "
-            "2048 tokens (%d specified);"
-            "expect poor results\n",
+            "%s: warning: base model only supports context sizes no greater "
+            "than 2048 tokens (%d specified);"
+            " you are on your own\n",
             __func__, params.n_ctx);
   } else if (params.n_ctx < 8) {
     fprintf(stderr,
