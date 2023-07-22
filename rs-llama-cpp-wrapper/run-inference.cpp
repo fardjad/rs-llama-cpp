@@ -630,8 +630,7 @@ int run_inference(gpt_params params, token_callback on_token = nullptr) {
 
         if (ctx_guidance) {
           llama_sample_classifier_free_guidance(ctx, &candidates_p,
-                                                ctx_guidance, params.cfg_scale,
-                                                params.cfg_smooth_factor);
+                                                ctx_guidance, params.cfg_scale);
         }
 
         // Apply penalties
