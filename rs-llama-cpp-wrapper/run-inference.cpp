@@ -4,6 +4,7 @@
 #endif
 
 #include "run-inference.h"
+#include "console.h"
 #include "grammar-parser.h"
 
 #include <cassert>
@@ -33,9 +34,7 @@
 #pragma warning(disable : 4244 4267) // possible loss of data
 #endif
 
-static console_state con_st;
 static llama_context **g_ctx;
-
 static bool is_interacting = false;
 
 #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__)) ||          \
@@ -45,7 +44,7 @@ void sigint_handler(int signo) {
     if (!is_interacting) {
       is_interacting = true;
     } else {
-      console_cleanup(con_st);
+      console::cleanup();
       printf("\n");
       llama_print_timings(*g_ctx);
       _exit(130);
@@ -58,10 +57,8 @@ int run_inference(gpt_params params, token_callback on_token = nullptr) {
 
   // save choice to use color for later
   // (note for later: this is a slightly awkward choice)
-  con_st.use_color = params.use_color;
-  con_st.multiline_input = params.multiline_input;
-  console_init(con_st);
-  atexit([]() { console_cleanup(con_st); });
+  console::init(params.simple_io, params.use_color);
+  atexit([]() { console::cleanup(); });
 
   if (params.perplexity) {
     printf("\n************\n");
@@ -419,7 +416,7 @@ int run_inference(gpt_params params, token_callback on_token = nullptr) {
 
   if (params.interactive) {
     const char *control_message;
-    if (con_st.multiline_input) {
+    if (params.multiline_input) {
       control_message =
           " - To return control to LLaMa, end your input with '\\'.\n"
           " - To return control without starting a new line, end your input "
@@ -456,7 +453,7 @@ int run_inference(gpt_params params, token_callback on_token = nullptr) {
 
   // the first thing we will do is to output the prompt, so set color
   // accordingly
-  console_set_color(con_st, CONSOLE_COLOR_PROMPT);
+  console::set_display(console::prompt);
 
   std::vector<llama_token> embd;
   std::vector<llama_token> embd_guidance;
@@ -481,10 +478,10 @@ int run_inference(gpt_params params, token_callback on_token = nullptr) {
       // necessary.
       if ((int)embd.size() > max_embd_size) {
         auto skipped_tokens = embd.size() - max_embd_size;
-        console_set_color(con_st, CONSOLE_COLOR_ERROR);
+        console::set_display(console::error);
         printf("<<input too long: skipped %zu token%s>>", skipped_tokens,
                skipped_tokens != 1 ? "s" : "");
-        console_set_color(con_st, CONSOLE_COLOR_DEFAULT);
+        console::set_display(console::reset);
         fflush(stdout);
         embd.resize(max_embd_size);
       }
@@ -752,7 +749,7 @@ int run_inference(gpt_params params, token_callback on_token = nullptr) {
     }
     // reset color to default if we there is no pending user input
     if (input_echo && (int)embd_inp.size() == n_consumed) {
-      console_set_color(con_st, CONSOLE_COLOR_DEFAULT);
+      console::set_display(console::reset);
     }
 
     // if not currently processing queued inputs;
@@ -783,7 +780,7 @@ int run_inference(gpt_params params, token_callback on_token = nullptr) {
               std::string::npos) {
             if (params.interactive) {
               is_interacting = true;
-              console_set_color(con_st, CONSOLE_COLOR_USER_INPUT);
+              console::set_display(console::user_input);
             }
             is_antiprompt = true;
             fflush(stdout);
@@ -806,7 +803,7 @@ int run_inference(gpt_params params, token_callback on_token = nullptr) {
 
           is_interacting = true;
           printf("\n");
-          console_set_color(con_st, CONSOLE_COLOR_USER_INPUT);
+          console::set_display(console::user_input);
           fflush(stdout);
         } else if (params.instruct) {
           is_interacting = true;
@@ -831,12 +828,12 @@ int run_inference(gpt_params params, token_callback on_token = nullptr) {
         std::string line;
         bool another_line = true;
         do {
-          another_line = console_readline(con_st, line);
+          another_line = console::readline(line, params.multiline_input);
           buffer += line;
         } while (another_line);
 
         // done taking input, reset color
-        console_set_color(con_st, CONSOLE_COLOR_DEFAULT);
+        console::set_display(console::reset);
 
         // Add tokens to embd only if the input buffer is non-empty
         // Entering a empty line lets the user pass control back
